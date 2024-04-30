@@ -5,10 +5,11 @@ import { AiFillDelete } from 'react-icons/ai';
 import { v4 as uuidv4 } from 'uuid';
 
 function App() {
-  // localStorage.clear();
   const [todo, setTodo] = useState('');
   const [todos, setTodos] = useState([]);
   const [showFinished, setShowFinished] = useState(true);
+  const [editingTodoId, setEditingTodoId] = useState(null); 
+  const [editedTodoText, setEditedTodoText] = useState({}); 
 
   useEffect(() => {
     const todoString = localStorage.getItem('todos');
@@ -26,11 +27,17 @@ function App() {
     setShowFinished(!showFinished);
   };
 
-  const handleEdit = (id) => {
+  const handleEdit = (id, todoText) => {
+    setEditingTodoId(id); 
+    setEditedTodoText({ [id]: todoText }); 
+  };
+
+  const handleSaveEdit = (id) => {
     const updatedTodos = todos.map((item) =>
-      item.id === id ? { ...item, todo } : item
+      item.id === id ? { ...item, todo: editedTodoText[id] } : item
     );
     saveToLS(updatedTodos);
+    setEditingTodoId(null); 
   };
 
   const handleDelete = (id) => {
@@ -105,17 +112,40 @@ function App() {
                     type="checkbox"
                     checked={item.isCompleted}
                   />
-                  <div className={item.isCompleted ? 'line-through' : ''}>
-                    {item.todo}
-                  </div>
+                  {editingTodoId === item.id ? (
+                    <input
+                      type="text"
+                      value={editedTodoText[item.id] || item.todo} 
+                      onChange={(e) =>
+                        setEditedTodoText({
+                          ...editedTodoText,
+                          [item.id]: e.target.value,
+                        })
+                      }
+                      autoFocus
+                    />
+                  ) : (
+                    <div className={item.isCompleted ? 'line-through' : ''}>
+                      {item.todo}
+                    </div>
+                  )}
                 </div>
                 <div className="buttons flex h-full">
-                  <button
-                    onClick={() => handleEdit(item.id)}
-                    className="bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
-                  >
-                    <FaEdit />
-                  </button>
+                  {editingTodoId !== item.id ? (
+                    <button
+                      onClick={() => handleEdit(item.id, item.todo)} 
+                      className="bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
+                    >
+                      <FaEdit />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleSaveEdit(item.id)} 
+                      className="bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
+                    >
+                      Save
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(item.id)}
                     className="bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
