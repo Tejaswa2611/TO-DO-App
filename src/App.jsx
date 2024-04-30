@@ -5,7 +5,9 @@ import { AiFillDelete } from 'react-icons/ai';
 import { v4 as uuidv4 } from 'uuid';
 
 function App() {
-  const [todo, setTodo] = useState('');
+  const [taskName, setTaskName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [priorityLevel, setPriorityLevel] = useState('low');
   const [todos, setTodos] = useState([]);
   const [showFinished, setShowFinished] = useState(true);
   const [editingTodoId, setEditingTodoId] = useState(null); 
@@ -34,7 +36,7 @@ function App() {
 
   const handleSaveEdit = (id) => {
     const updatedTodos = todos.map((item) =>
-      item.id === id ? { ...item, todo: editedTodoText[id] } : item
+      item.id === id ? { ...item, taskName: editedTodoText[id] } : item
     );
     saveToLS(updatedTodos);
     setEditingTodoId(null); 
@@ -46,14 +48,23 @@ function App() {
   };
 
   const handleAdd = () => {
-    if (todo.trim() === '') return;
-    const updatedTodos = [...todos, { id: uuidv4(), todo, isCompleted: false }];
+    if (taskName.trim() === '') return;
+    const updatedTodos = [...todos, { id: uuidv4(), taskName, taskDescription, priorityLevel, isCompleted: false }];
     saveToLS(updatedTodos);
-    setTodo('');
+    setTaskName('');
+    setTaskDescription('');
+    setPriorityLevel('low');
   };
 
   const handleChange = (e) => {
-    setTodo(e.target.value);
+    const { name, value } = e.target;
+    if (name === 'taskName') {
+      setTaskName(value);
+    } else if (name === 'taskDescription') {
+      setTaskDescription(value);
+    } else if (name === 'priorityLevel') {
+      setPriorityLevel(value);
+    }
   };
 
   const handleCheckbox = (id) => {
@@ -70,17 +81,36 @@ function App() {
         <h1 className="font-bold text-center text-3xl">Task Manager</h1>
         <div className="addTodo my-5 flex flex-col gap-4">
           <h2 className="text-2xl font-bold">Add a Todo</h2>
-          <div className="flex">
+          <div className="flex flex-col gap-2">
             <input
+              name="taskName"
               onChange={handleChange}
-              value={todo}
+              value={taskName}
               type="text"
-              className="w-full rounded-full px-5 py-1"
+              placeholder="Task Name"
+              className="rounded-full px-5 py-1"
             />
+            <textarea
+              name="taskDescription"
+              onChange={handleChange}
+              value={taskDescription}
+              placeholder="Task Description"
+              className="rounded-lg px-5 py-3"
+            />
+            <select
+              name="priorityLevel"
+              onChange={handleChange}
+              value={priorityLevel}
+              className="rounded-full px-5 py-1"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
             <button
               onClick={handleAdd}
-              disabled={todo.length <= 3}
-              className="bg-violet-800 mx-2 rounded-full hover:bg-violet-950 disabled:bg-violet-500 p-4 py-2 text-sm font-bold text-white"
+              disabled={taskName.length <= 3}
+              className="bg-violet-800 rounded-full hover:bg-violet-950 disabled:bg-violet-500 p-4 py-2 text-sm font-bold text-white"
             >
               Save
             </button>
@@ -115,7 +145,7 @@ function App() {
                   {editingTodoId === item.id ? (
                     <input
                       type="text"
-                      value={editedTodoText[item.id] || item.todo} 
+                      value={editedTodoText[item.id] || item.taskName} 
                       onChange={(e) =>
                         setEditedTodoText({
                           ...editedTodoText,
@@ -126,14 +156,16 @@ function App() {
                     />
                   ) : (
                     <div className={item.isCompleted ? 'line-through' : ''}>
-                      {item.todo}
+                      <div><strong>{item.taskName}</strong></div>
+                      <div>{item.taskDescription}</div>
+                      <div>Priority: {item.priorityLevel}</div>
                     </div>
                   )}
                 </div>
                 <div className="buttons flex h-full">
                   {editingTodoId !== item.id ? (
                     <button
-                      onClick={() => handleEdit(item.id, item.todo)} 
+                      onClick={() => handleEdit(item.id, item.taskName)} 
                       className="bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
                     >
                       <FaEdit />
